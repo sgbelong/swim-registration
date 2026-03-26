@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register for Swim Lessons</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  :root {
+    --blue: #2a7fc1;
+    --blue-light: #e8f4fd;
+    --blue-mid: #c5dff4;
+    --blue-dark: #1a5a8a;
+    --teal: #3aab8c;
+    --teal-light: #e6f7f3;
+    --white: #ffffff;
+    --gray-bg: #f7f9fc;
+    --gray-border: #dde4ed;
+    --gray-text: #5c6b7a;
+    --text: #1e2d3d;
+    --red: #c0392b;
+    --red-light: #fdf0ee;
+    --shadow: 0 2px 12px rgba(42,127,193,0.10);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--gray-bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+  .container { max-width: 680px; margin: 0 auto; }
+  h1 {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--blue-dark);
+    text-align: center;
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--gray-text);
+    font-size: 0.97rem;
+    margin-bottom: 28px;
+  }
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-border);
+    box-shadow: var(--shadow);
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: var(--blue-dark);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .num {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  label {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--gray-text);
+    margin-bottom: 5px;
+    margin-top: 14px;
+  }
+  label:first-of-type { margin-top: 0; }
+  input[type=text], input[type=email], input[type=tel], input[type=number], select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--gray-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--white);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(42,127,193,0.12);
+  }
+  .instructor-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .instructor-card {
+    border: 2px solid var(--gray-border);
+    border-radius: var(--radius);
+    padding: 14px 10px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .instructor-card:hover { border-color: var(--blue); background: var(--blue-light); }
+  .instructor-card.selected { border-color: var(--blue); background: var(--blue-light); }
+  .instructor-card .icon { font-size: 1.8rem; margin-bottom: 6px; }
+  .instructor-card .name { font-weight: 700; font-size: 0.95rem; color: var(--blue-dark); }
+  .instructor-card .loc { font-size: 0.78rem; color: var(--gray-text); margin-top: 2px; }
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .week-btn {
+    border: 2px solid var(--gray-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 8px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--white);
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .week-btn:hover:not(.full):not(.selected) { border-color: var(--blue); background: var(--blue-light); }
+  .week-btn.selected { border-color: var(--blue); background: var(--blue); color: #fff; }
+  .week-btn.full { background: #f0f0f0; color: #aaa; cursor: not-allowed; border-color: #e0e0e0; text-decoration: line-through; }
+  .week-btn .spots { font-size: 0.73rem; font-weight: 400; display: block; margin-top: 3px; }
+  .week-btn.selected .spots { color: rgba(255,255,255,0.85); }
+  .week-btn.full .spots { color: #aaa; }
+  .time-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .time-btn {
+    border: 2px solid var(--gray-border);
+    border-radius: var(--radius-sm);
+    padding: 9px 4px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--white);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .time-btn:hover:not(.taken):not(.selected) { border-color: var(--teal); background: var(--teal-light); }
+  .time-btn.selected { border-color: var(--teal); background: var(--teal); color: #fff; }
+  .time-btn.taken { background: #f0f0f0; color: #bbb; cursor: not-allowed; border-color: #e8e8e8; font-size: 0.8rem; }
+  .level-list { display: flex; flex-direction: column; gap: 8px; }
+  .level-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    border: 2px solid var(--gray-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .level-item:hover { border-color: var(--blue); background: var(--blue-light); }
+  .level-item.selected { border-color: var(--blue); background: var(--blue-light); }
+  .level-num { width: 26px; height: 26px; border-radius: 50%; background: var(--blue-mid); color: var(--blue-dark); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .level-item.selected .level-num { background: var(--blue); color: #fff; }
+  .level-info .level-name { font-weight: 700; font-size: 0.93rem; }
+  .level-info .level-desc { font-size: 0.82rem; color: var(--gray-text); margin-top: 2px; }
+  .waiver-box {
+    max-height: 160px;
+    overflow-y: auto;
+    border: 1.5px solid var(--gray-border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    color: var(--gray-text);
+    background: var(--gray-bg);
+    margin-bottom: 12px;
+  }
+  .checkbox-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-top: 10px;
+    cursor: pointer;
+  }
+  .checkbox-row input[type=checkbox] { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; accent-color: var(--blue); }
+  .checkbox-row span { font-size: 0.87rem; line-height: 1.5; }
+  .sig-field {
+    border: 1.5px solid var(--gray-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-family: 'Georgia', serif;
+    font-size: 1.15rem;
+    font-style: italic;
+    width: 100%;
+    color: var(--blue-dark);
+    margin-top: 8px;
+    background: #fffdf5;
+  }
+  .price-box {
+    background: var(--blue-light);
+    border: 1.5px solid var(--blue-mid);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 0;
+  }
+  .price-row { display: flex; justify-content: space-between; align-items: center; }
+  .price-label { font-size: 0.92rem; color: var(--blue-dark); }
+  .price-total { font-size: 1.3rem; font-weight: 800; color: var(--blue-dark); }
+  .payment-instructions {
+    background: var(--teal-light);
+    border: 1.5px solid #b2dfd3;
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-top: 16px;
+  }
+  .payment-instructions .pay-title { font-weight: 700; color: #1a6e57; font-size: 0.95rem; margin-bottom: 8px; }
+  .payment-instructions .pay-opt { font-size: 0.88rem; color: #1a6e57; margin-bottom: 4px; }
+  .btn-submit {
+    width: 100%;
+    padding: 15px;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 1.07rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 24px;
+    letter-spacing: 0.01em;
+    transition: background 0.15s;
+  }
+  .btn-submit:hover { background: var(--blue-dark); }
+  .btn-submit:disabled { background: #b0c8e0; cursor: not-allowed; }
+  .error { color: var(--red); font-size: 0.83rem; margin-top: 5px; }
+  .alert {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    font-size: 0.88rem;
+  }
+  .alert-info { background: var(--blue-light); border: 1px solid var(--blue-mid); color: var(--blue-dark); }
+  .alert-warning { background: #fff8e1; border: 1px solid #ffe082; color: #7a5c00; }
+  .alert-danger { background: var(--red-light); border: 1px solid #f0b9b3; color: var(--red); }
+  .success-screen { display: none; text-align: center; padding: 40px 20px; }
+  .success-icon { font-size: 3rem; margin-bottom: 12px; }
+  .success-screen h2 { color: var(--teal); font-size: 1.5rem; margin-bottom: 10px; }
+  .success-screen p { color: var(--gray-text); font-size: 0.95rem; line-height: 1.6; max-width: 420px; margin: 0 auto 16px; }
+  .cancel-note {
+    font-size: 0.82rem;
+    color: var(--gray-text);
+    text-align: center;
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+  .cancel-link { color: var(--blue); text-decoration: underline; cursor: pointer; }
+  .hidden { display: none !important; }
+  .step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .step-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gray-border);
+    transition: background 0.2s;
+  }
+  .step-dot.active { background: var(--blue); }
+  .step-dot.done { background: var(--teal); }
+  .multi-week-note {
+    font-size: 0.83rem;
+    color: var(--gray-text);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+  .selected-weeks-list {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .week-tag {
+    background: var(--blue);
+    color: #fff;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .week-tag .remove { cursor: pointer; font-size: 1rem; line-height: 1; opacity: 0.8; }
+  .week-tag .remove:hover { opacity: 1; }
+  #cancel-section { margin-top: 40px; }
+  .cancel-form-card { border: 1.5px solid #f0b9b3; background: #fffbfb; }
+  @media (max-width: 520px) {
+    .instructor-grid { grid-template-columns: 1fr; }
+    .card { padding: 18px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div id="main-form">
+    <h1>🏊 Register for Swim Lessons</h1>
+    <p class="subtitle">Private lessons · 4 sessions (Mon–Thu) · $80 per week</p>
+
+    <div class="step-indicator">
+      <div class="step-dot active" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+      <div class="step-dot" id="dot3"></div>
+      <div class="step-dot" id="dot4"></div>
+      <div class="step-dot" id="dot5"></div>
+    </div>
+
+    <!-- STEP 1: Instructor -->
+    <div id="step1" class="card">
+      <div class="section-title"><div class="num">1</div> Choose an Instructor</div>
+      <div class="instructor-grid">
+        <div class="instructor-card" data-instructor="Sienna" onclick="selectInstructor(this)">
+          <div class="icon">👩‍🏫</div>
+          <div class="name">Sienna</div>
+          <div class="loc">Shasta View / Rancho</div>
+        </div>
+        <div class="instructor-card" data-instructor="Hailey" onclick="selectInstructor(this)">
+          <div class="icon">👩‍🏫</div>
+          <div class="name">Hailey</div>
+          <div class="loc">Palo Cedro</div>
+        </div>
+        <div class="instructor-card" data-instructor="Madi" onclick="selectInstructor(this)">
+          <div class="icon">👩‍🏫</div>
+          <div class="name">Madi</div>
+          <div class="loc">Old Oregon</div>
+        </div>
+      </div>
+      <div id="err-instructor" class="error hidden">Please choose an instructor.</div>
+    </div>
+
+    <!-- STEP 2: Week(s) -->
+    <div id="step2" class="card hidden">
+      <div class="section-title"><div class="num">2</div> Choose Your Week(s)</div>
+      <div class="alert alert-info">You can sign up for multiple weeks! Each week = Mon–Thu, 4 lessons, $80.</div>
+      <div id="week-grid" class="week-grid"></div>
+      <p class="multi-week-note">Select all the weeks you'd like to book. You'll pick a time slot for each week.</p>
+      <div id="selected-weeks-list" class="selected-weeks-list"></div>
+      <div id="err-week" class="error hidden">Please select at least one week.</div>
+    </div>
+
+    <!-- STEP 3: Time slot -->
+    <div id="step3" class="card hidden">
+      <div class="section-title"><div class="num">3</div> Choose a Time Slot</div>
+      <p style="font-size:0.88rem;color:var(--gray-text);margin-bottom:12px;">This time will apply to all your selected weeks unless a slot is already taken. Lessons are 30 minutes, Mon–Thu.</p>
+      <div id="time-grid" class="time-grid"></div>
+      <div id="err-time" class="error hidden">Please choose a time slot.</div>
+    </div>
+
+    <!-- STEP 4: Kid info -->
+    <div id="step4" class="card hidden">
+      <div class="section-title"><div class="num">4</div> About Your Child</div>
+      <label for="parent-name">Parent / Guardian Name</label>
+      <input type="text" id="parent-name" placeholder="Full name">
+
+      <label for="phone">Phone Number</label>
+      <input type="tel" id="phone" placeholder="(530) 000-0000">
+
+      <label for="email">Email Address</label>
+      <input type="email" id="email" placeholder="you@email.com">
+
+      <label for="kid-name">Child's Name</label>
+      <input type="text" id="kid-name" placeholder="First and last name">
+
+      <label for="kid-age">Child's Age</label>
+      <input type="number" id="kid-age" placeholder="e.g. 6" min="3" max="16">
+
+      <label>Swimming Level</label>
+      <div class="level-list">
+        <div class="level-item" onclick="selectLevel(this, 1)">
+          <div class="level-num">1</div>
+          <div class="level-info">
+            <div class="level-name">Water Explorer (Beginner)</div>
+            <div class="level-desc">No experience. Learning to be comfortable in the water, floating, and blowing bubbles.</div>
+          </div>
+        </div>
+        <div class="level-item" onclick="selectLevel(this, 2)">
+          <div class="level-num">2</div>
+          <div class="level-info">
+            <div class="level-name">Paddler (Early Swimmer)</div>
+            <div class="level-desc">Can float with support, kicks legs, starting to move through the water independently.</div>
+          </div>
+        </div>
+        <div class="level-item" onclick="selectLevel(this, 3)">
+          <div class="level-num">3</div>
+          <div class="level-info">
+            <div class="level-name">Swimmer (Developing)</div>
+            <div class="level-desc">Swims short distances on their own, learning freestyle and backstroke basics.</div>
+          </div>
+        </div>
+        <div class="level-item" onclick="selectLevel(this, 4)">
+          <div class="level-num">4</div>
+          <div class="level-info">
+            <div class="level-name">Stroke Builder (Intermediate)</div>
+            <div class="level-desc">Comfortable swimming laps, working on technique, endurance, and learning breaststroke or butterfly.</div>
+          </div>
+        </div>
+        <div class="level-item" onclick="selectLevel(this, 5)">
+          <div class="level-num">5</div>
+          <div class="level-info">
+            <div class="level-name">Racer (Advanced)</div>
+            <div class="level-desc">Strong swimmer, knows all four strokes, working on speed, turns, and competitive technique.</div>
+          </div>
+        </div>
+      </div>
+      <div id="err-level" class="error hidden">Please select a level.</div>
+      <div id="err-fields" class="error hidden">Please fill in all fields above.</div>
+    </div>
+
+    <!-- STEP 5: Waiver + Payment -->
+    <div id="step5" class="card hidden">
+      <div class="section-title"><div class="num">5</div> Liability Waiver</div>
+      <div class="waiver-box">
+        <strong>RELEASE OF LIABILITY, WAIVER OF CLAIMS, AND INDEMNITY AGREEMENT</strong><br><br>
+        In consideration of my child being permitted to participate in private swim lessons with Redding Swim Lessons, I hereby agree to the following:<br><br>
+        <strong>1. Assumption of Risk.</strong> I acknowledge that swimming and aquatic activities involve inherent risks of injury or death, including but not limited to drowning, slipping, collision with other participants, or physical exertion. I voluntarily assume all such risks on behalf of myself and my child.<br><br>
+        <strong>2. Release of Liability.</strong> I, on behalf of myself, my child, heirs, and legal representatives, hereby release, waive, discharge, and covenant not to sue the swim instructor(s), the pool owner, Redding Swim Lessons, and their respective agents and volunteers from any and all liability, claims, demands, and causes of action arising out of or related to any loss, damage, or injury that may occur during or as a result of participation in swim lessons, whether caused by negligence or otherwise.<br><br>
+        <strong>3. Medical Authorization.</strong> I grant permission to seek emergency medical care for my child if needed during lessons.<br><br>
+        <strong>4. Photo & Media.</strong> I grant permission for photos or videos of my child to be used for promotional purposes by Redding Swim Lessons. (Check the box below if you do NOT consent to this.)<br><br>
+        <strong>5. Cancellation Policy.</strong> Cancellations must be made more than two weeks (14 days) before the first lesson of the registered week to be eligible for a refund. Cancellations made with less than two weeks' notice will not be refunded.<br><br>
+        I have read and fully understand this waiver. I agree that it is binding upon me, my heirs, and legal representatives.
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="waiver-agree">
+        <span><strong>I have read and agree to the liability waiver</strong> above, including the cancellation and refund policy.</span>
+      </div>
+      <div class="checkbox-row" style="margin-top:8px;">
+        <input type="checkbox" id="no-photo">
+        <span>I do <strong>NOT</strong> consent to photos/videos of my child being used for promotional purposes.</span>
+      </div>
+      <label for="signature" style="margin-top:18px;">Electronic Signature <span style="font-weight:400;font-size:0.82rem;color:var(--gray-text)">(Type your full name as your signature)</span></label>
+      <input type="text" class="sig-field" id="signature" placeholder="Your full name">
+      <div id="err-waiver" class="error hidden">Please agree to the waiver and sign your name.</div>
+    </div>
+
+    <!-- Summary + Payment -->
+    <div id="step5b" class="card hidden">
+      <div class="section-title"><div class="num">6</div> Review &amp; Payment</div>
+      <div id="summary-box" class="price-box">
+        <div class="price-row">
+          <div>
+            <div class="price-label" id="summary-text">Loading...</div>
+            <div style="font-size:0.8rem;color:var(--blue-dark);margin-top:4px;" id="summary-details"></div>
+          </div>
+          <div class="price-total" id="price-total">$0</div>
+        </div>
+      </div>
+      <div class="payment-instructions">
+        <div class="pay-title">💳 How to Pay</div>
+        <div class="pay-opt">Submit this form, then send payment to confirm your spot:</div>
+        <div class="pay-opt">📱 <strong>Venmo:</strong> @reddingswimlessons</div>
+        <div class="pay-opt">💰 <strong>Zelle:</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="493b2c2d2d20272e3a3e2024252c3a3a26273a092e24282025672a2624">[email&#160;protected]</a></div>
+        <div class="pay-opt">💵 <strong>Cash:</strong> Accepted at the first lesson</div>
+        <div style="font-size:0.8rem;color:#2a7a63;margin-top:8px;">Your spot is held for 48 hours after registration. Please pay promptly to confirm.</div>
+      </div>
+      <div id="err-submit" class="error hidden"></div>
+      <button class="btn-submit" id="submit-btn" onclick="submitForm()">Submit Registration</button>
+      <p class="cancel-note">Need to cancel? <span class="cancel-link" onclick="scrollToCancel()">Click here</span>. Cancellations must be made <strong>more than 2 weeks</strong> before your first lesson for a refund.</p>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:8px;" id="nav-btns">
+      <button id="btn-back" style="display:none;padding:10px 24px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);background:#fff;cursor:pointer;font-size:0.93rem;font-weight:600;" onclick="goBack()">← Back</button>
+      <button id="btn-next" style="padding:10px 28px;border:none;border-radius:var(--radius-sm);background:var(--blue);color:#fff;cursor:pointer;font-size:0.93rem;font-weight:700;" onclick="goNext()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="success-screen" class="card success-screen">
+    <div class="success-icon">🎉</div>
+    <h2>You're registered!</h2>
+    <p>Thank you! We've received your registration. Please send payment within 48 hours to confirm your spot. A confirmation email will be sent to the address you provided.</p>
+    <p id="success-details" style="background:var(--blue-light);border-radius:var(--radius-sm);padding:14px 16px;font-size:0.9rem;color:var(--blue-dark);text-align:left;"></p>
+    <p style="margin-top:16px;font-size:0.85rem;">Questions? Contact Sienna at <a href="tel:5306382681" style="color:var(--blue)">(530) 638-2681</a> or <a href="/cdn-cgi/l/email-protection#0c7e69686865626b7f7b656160697f7f63627f4c6b616d6560226f6361" style="color:var(--blue)"><span class="__cf_email__" data-cfemail="84f6e1e0e0edeae3f7f3ede9e8e1f7f7ebeaf7c4e3e9e5ede8aae7ebe9">[email&#160;protected]</span></a></p>
+  </div>
+
+  <!-- CANCEL SECTION -->
+  <div id="cancel-section" style="margin-top:48px;">
+    <div class="card cancel-form-card">
+      <div class="section-title" style="color:#a01e11;">📋 Cancel a Registration</div>
+      <div class="alert alert-warning">
+        ⚠️ <strong>Refund Policy:</strong> Cancellations must be made <strong>more than 2 weeks (14 days) before your first lesson</strong> to be eligible for a refund. Cancellations made after that will not be refunded.
+      </div>
+      <label for="cancel-email">Your Email Address</label>
+      <input type="email" id="cancel-email" placeholder="The email used when you registered">
+      <label for="cancel-name">Child's Name</label>
+      <input type="text" id="cancel-name" placeholder="Child's first and last name">
+      <label for="cancel-week">Week You're Canceling</label>
+      <select id="cancel-week">
+        <option value="">-- Select week --</option>
+        <option>Week of June 8</option>
+        <option>Week of June 15</option>
+        <option>Week of June 22</option>
+        <option>Week of June 29</option>
+        <option>Week of July 6</option>
+        <option>Week of July 13</option>
+        <option>Week of July 20</option>
+      </select>
+      <label for="cancel-reason">Reason for Cancellation <span style="font-weight:400;font-size:0.82rem;">(optional)</span></label>
+      <textarea id="cancel-reason" rows="3" placeholder="Optional — helps us improve!"></textarea>
+      <div id="cancel-msg" class="error hidden"></div>
+      <button class="btn-submit" style="margin-top:16px;" onclick="submitCancellation()">Submit Cancellation Request</button>
+    </div>
+  </div>
+
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ---- FILL THESE IN AFTER SETUP ----
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyB8_QF10AabcRHPksOYHx-RnFEUeYubIVPXbwqFKi1N1vI25v6aWuSCeFmUf34l4ovCQ/exec';
+const EMAILJS_PUBLIC_KEY = '';
+const EMAILJS_SERVICE_ID = '';
+const EMAILJS_TEMPLATE_ID = '';
+// ------------------------------------
+
+if (EMAILJS_PUBLIC_KEY) emailjs.init(EMAILJS_PUBLIC_KEY);
+
+const schedules = {
+  Sienna: {
+    weeks: ['June 8','June 15','June 22','June 29','July 6','July 13','July 20'],
+    times: ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:30 AM','12:00 PM','12:30 PM','1:00 PM','1:30 PM']
+  },
+  Hailey: {
+    weeks: ['June 8','June 15','June 22','June 29','July 6','July 13'],
+    times: ['10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','12:30 PM','1:00 PM','1:30 PM','2:00 PM']
+  },
+  Madi: {
+    weeks: ['June 8','June 15','June 22','June 29','July 6','July 13','July 20'],
+    times: ['10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','12:30 PM','1:00 PM','1:30 PM','2:00 PM']
+  }
+};
+
+let state = {
+  instructor: null,
+  selectedWeeks: [],
+  time: null,
+  level: null,
+  takenSlots: {},
+  currentStep: 1
+};
+
+const steps = [null,'step1','step2','step3','step4','step5','step5b'];
+const totalSteps = 6;
+
+function setDots(step) {
+  for (let i = 1; i <= totalSteps; i++) {
+    const d = document.getElementById('dot' + i);
+    if (!d) return;
+    d.className = 'step-dot' + (i < step ? ' done' : i === step ? ' active' : '');
+  }
+}
+
+function showStep(n) {
+  for (let i = 1; i <= totalSteps; i++) {
+    const el = document.getElementById(steps[i]);
+    if (el) el.classList.add('hidden');
+  }
+  const el = document.getElementById(steps[n]);
+  if (el) el.classList.remove('hidden');
+  document.getElementById('btn-back').style.display = n > 1 ? 'inline-block' : 'none';
+  document.getElementById('btn-next').style.display = n < totalSteps ? 'inline-block' : 'none';
+  document.getElementById('nav-btns').style.display = (n === totalSteps) ? 'none' : 'flex';
+  setDots(n);
+  state.currentStep = n;
+  if (n === totalSteps) updateSummary();
+}
+
+function selectInstructor(el) {
+  document.querySelectorAll('.instructor-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.instructor = el.dataset.instructor;
+  state.selectedWeeks = [];
+  state.time = null;
+  document.getElementById('err-instructor').classList.add('hidden');
+}
+
+function renderWeeks() {
+  const grid = document.getElementById('week-grid');
+  grid.innerHTML = '';
+  const sched = schedules[state.instructor];
+  sched.weeks.forEach(w => {
+    const btn = document.createElement('button');
+    btn.className = 'week-btn';
+    const key = state.instructor + '_' + w;
+    const taken = (state.takenSlots[key] || []).length;
+    const avail = sched.times.length - taken;
+    btn.dataset.week = w;
+    if (avail <= 0) {
+      btn.classList.add('full');
+      btn.innerHTML = 'Week of ' + w + '<span class="spots">Full</span>';
+    } else {
+      if (state.selectedWeeks.includes(w)) btn.classList.add('selected');
+      btn.innerHTML = 'Week of ' + w + '<span class="spots">' + avail + ' slot' + (avail !== 1 ? 's' : '') + ' left</span>';
+      btn.onclick = () => toggleWeek(btn, w);
+    }
+    grid.appendChild(btn);
+  });
+  renderWeekTags();
+}
+
+function toggleWeek(btn, week) {
+  const idx = state.selectedWeeks.indexOf(week);
+  if (idx === -1) {
+    state.selectedWeeks.push(week);
+    btn.classList.add('selected');
+  } else {
+    state.selectedWeeks.splice(idx, 1);
+    btn.classList.remove('selected');
+  }
+  renderWeekTags();
+}
+
+function renderWeekTags() {
+  const list = document.getElementById('selected-weeks-list');
+  list.innerHTML = '';
+  state.selectedWeeks.forEach(w => {
+    const tag = document.createElement('div');
+    tag.className = 'week-tag';
+    tag.innerHTML = 'Week of ' + w + ' <span class="remove" onclick="removeWeek(\'' + w + '\')">&times;</span>';
+    list.appendChild(tag);
+  });
+}
+
+function removeWeek(week) {
+  state.selectedWeeks = state.selectedWeeks.filter(w => w !== week);
+  renderWeeks();
+}
+
+function renderTimes() {
+  const grid = document.getElementById('time-grid');
+  grid.innerHTML = '';
+  const sched = schedules[state.instructor];
+  sched.times.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'time-btn';
+    btn.dataset.time = t;
+    let takenInAnyWeek = false;
+    state.selectedWeeks.forEach(w => {
+      const key = state.instructor + '_' + w;
+      if ((state.takenSlots[key] || []).includes(t)) takenInAnyWeek = true;
+    });
+    if (takenInAnyWeek) {
+      btn.classList.add('taken');
+      btn.textContent = t + ' (taken)';
+    } else {
+      if (state.time === t) btn.classList.add('selected');
+      btn.textContent = t;
+      btn.onclick = () => selectTime(btn, t);
+    }
+    grid.appendChild(btn);
+  });
+}
+
+function selectTime(btn, t) {
+  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.time = t;
+  document.getElementById('err-time').classList.add('hidden');
+}
+
+function selectLevel(el, n) {
+  document.querySelectorAll('.level-item').forEach(l => l.classList.remove('selected'));
+  el.classList.add('selected');
+  state.level = n;
+  document.getElementById('err-level').classList.add('hidden');
+}
+
+function goNext() {
+  const s = state.currentStep;
+  if (s === 1) {
+    if (!state.instructor) { document.getElementById('err-instructor').classList.remove('hidden'); return; }
+    renderWeeks();
+    showStep(2);
+  } else if (s === 2) {
+    if (state.selectedWeeks.length === 0) { document.getElementById('err-week').classList.remove('hidden'); return; }
+    document.getElementById('err-week').classList.add('hidden');
+    renderTimes();
+    showStep(3);
+  } else if (s === 3) {
+    if (!state.time) { document.getElementById('err-time').classList.remove('hidden'); return; }
+    showStep(4);
+  } else if (s === 4) {
+    const pn = document.getElementById('parent-name').value.trim();
+    const ph = document.getElementById('phone').value.trim();
+    const em = document.getElementById('email').value.trim();
+    const kn = document.getElementById('kid-name').value.trim();
+    const ka = document.getElementById('kid-age').value.trim();
+    if (!pn || !ph || !em || !kn || !ka) { document.getElementById('err-fields').classList.remove('hidden'); return; }
+    if (!state.level) { document.getElementById('err-level').classList.remove('hidden'); return; }
+    document.getElementById('err-fields').classList.add('hidden');
+    showStep(5);
+  } else if (s === 5) {
+    const agreed = document.getElementById('waiver-agree').checked;
+    const sig = document.getElementById('signature').value.trim();
+    if (!agreed || !sig) { document.getElementById('err-waiver').classList.remove('hidden'); return; }
+    document.getElementById('err-waiver').classList.add('hidden');
+    showStep(6);
+  }
+}
+
+function goBack() {
+  if (state.currentStep > 1) showStep(state.currentStep - 1);
+}
+
+const levelNames = ['','Water Explorer','Paddler','Swimmer','Stroke Builder','Racer'];
+
+function updateSummary() {
+  const weeks = state.selectedWeeks.length;
+  const total = weeks * 80;
+  document.getElementById('summary-text').textContent =
+    state.instructor + ' · ' + weeks + ' week' + (weeks !== 1 ? 's' : '') + ' · ' + state.time;
+  document.getElementById('summary-details').textContent =
+    state.selectedWeeks.map(w => 'Week of ' + w).join(' · ');
+  document.getElementById('price-total').textContent = '$' + total;
+}
+
+async function loadTakenSlots() {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
+  try {
+    const res = await fetch(GOOGLE_SCRIPT_URL + '?action=getSlots');
+    const data = await res.json();
+    state.takenSlots = data || {};
+  } catch(e) {}
+}
+
+async function submitForm() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  const payload = {
+    action: 'register',
+    instructor: state.instructor,
+    weeks: state.selectedWeeks.join(', '),
+    time: state.time,
+    parentName: document.getElementById('parent-name').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    kidName: document.getElementById('kid-name').value.trim(),
+    kidAge: document.getElementById('kid-age').value.trim(),
+    level: state.level + ' - ' + levelNames[state.level],
+    signature: document.getElementById('signature').value.trim(),
+    noPhoto: document.getElementById('no-photo').checked ? 'No photo consent' : 'Photo consent given',
+    timestamp: new Date().toLocaleString(),
+    total: '$' + (state.selectedWeeks.length * 80)
+  };
+
+  let success = false;
+  if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      success = true;
+    } catch(e) {
+      document.getElementById('err-submit').textContent = 'Submission error. Please try again or contact us directly.';
+      document.getElementById('err-submit').classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Submit Registration';
+      return;
+    }
+  } else {
+    success = true;
+  }
+
+  if (success) {
+    // Send confirmation email via EmailJS
+    if (EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+      const weeks = state.selectedWeeks.length;
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: document.getElementById('email').value.trim(),
+        to_name: document.getElementById('parent-name').value.trim(),
+        kid_name: document.getElementById('kid-name').value.trim(),
+        instructor: state.instructor,
+        weeks: state.selectedWeeks.map(w => 'Week of ' + w).join(', '),
+        time: state.time,
+        total: '$' + (weeks * 80),
+        venmo: '@reddingswimlessons',
+        zelle: 'reddingswimlessons@gmail.com'
+      }).catch(err => console.warn('EmailJS error:', err));
+    }
+    document.getElementById('main-form').classList.add('hidden');
+    const sc = document.getElementById('success-screen');
+    sc.style.display = 'block';
+    document.getElementById('success-details').innerHTML =
+      '<strong>Instructor:</strong> ' + payload.instructor + '<br>' +
+      '<strong>Week(s):</strong> ' + payload.weeks + '<br>' +
+      '<strong>Time:</strong> ' + payload.time + ' (Mon–Thu)<br>' +
+      '<strong>Child:</strong> ' + payload.kidName + ', age ' + payload.kidAge + '<br>' +
+      '<strong>Total Due:</strong> ' + payload.total + '<br><br>' +
+      'Please send payment via Venmo (@reddingswimlessons) or Zelle (reddingswimlessons@gmail.com) to confirm your spot.';
+  }
+}
+
+async function submitCancellation() {
+  const email = document.getElementById('cancel-email').value.trim();
+  const name = document.getElementById('cancel-name').value.trim();
+  const week = document.getElementById('cancel-week').value;
+  const msg = document.getElementById('cancel-msg');
+  if (!email || !name || !week) {
+    msg.textContent = 'Please fill in all required fields.';
+    msg.classList.remove('hidden');
+    msg.style.color = 'var(--red)';
+    return;
+  }
+  const payload = {
+    action: 'cancel',
+    email, childName: name, week,
+    reason: document.getElementById('cancel-reason').value.trim(),
+    timestamp: new Date().toLocaleString()
+  };
+  if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+    try { await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) }); } catch(e) {}
+  }
+  msg.textContent = 'Cancellation request submitted! We will contact you at '
